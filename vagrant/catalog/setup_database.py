@@ -1,57 +1,63 @@
-import sys
-from sqlalchemy import Column, ForeignKey, Integer, String, Float
+#!/usr/bin/env python3
+
+from sqlalchemy import Column, ForeignKey, Integer, String, DateTime, UniqueConstraint
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
+from sqlalchemy.sql import func
 from sqlalchemy import create_engine
 
 Base = declarative_base()
 
 
-class WeaponType(Base):
-    __tablename__ = 'weaponType'
+class CharacterClass(Base):
+    __tablename__ = 'character_class'
 
-    name = Column(String(80), nullable=False, unique=True)
     id = Column(Integer, primary_key=True)
+    name = Column(String(20), nullable=False, unique=True)
 
 
-class ArmorType(Base):
-    __tablename__ = 'armorType'
+class GameVersion(Base):
+    __tablename__ = 'game_version'
 
-    name = Column(String(80), nullable=False, unique=True)
+    name = Column(String(5), primary_key=True)
+
+
+class User(Base):
+    __tablename__ = 'user'
+
     id = Column(Integer, primary_key=True)
+    name = Column(String(250), nullable=False)
+    email = Column(String(250), nullable=False)
+    picture = Column(String(250))
 
 
-class Weapon(Base):
-    __tablename__ = 'weapon'
+class Build(Base):
+    __tablename__ = 'build'
 
-    name = Column(String(80), nullable=False, unique=True)
     id = Column(Integer, primary_key=True)
-    weaponTypeID = Column(Integer, ForeignKey('weaponType.id'))
-    weaponType = relationship(WeaponType)
-    reqLevel = Column(Integer)
-    minDamage = Column(Integer)
-    maxDamage = Column(Integer)
-    attacksPerSecond = Column(Float)
-    damagePerSecond = Column(Float)
-    reqStrength = Column(Integer)
-    reqDexterity = Column(Integer)
-    reqIntelligence = Column(Integer)
+    title = Column(String(200), nullable=False)
+    character_class_name = Column(String(20), ForeignKey("character_class.name"), nullable=False)
+    character_class = relationship(CharacterClass)
+    short_description = Column(String(500))
+    long_description = Column(String(50000))
+    url = Column(String(500))
+    game_version = Column(String(5), ForeignKey("game_version.name"), nullable=False)
+    time_created = Column(DateTime(timezone=True), server_default=func.now())
+    time_updated = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+    author = Column(String(100))
+    user_id = Column(Integer, ForeignKey('user.id'))
+    user = relationship(User)
+    favorites = relationship('Favorite', cascade='all, delete', backref='build')
 
 
-class Armor(Base):
-    __tablename__ = 'armor'
+class Favorite(Base):
+    __tablename__ = 'favorite'
 
-    name = Column(String(80), nullable=False, unique=True)
     id = Column(Integer, primary_key=True)
-    armorTypeID = Column(Integer, ForeignKey('armorType.id'))
-    armorType = relationship(ArmorType)
-    reqLevel = Column(Integer)
-    armorAmount = Column(Integer)
-    evasionRating = Column(Integer)
-    energyShield = Column(Integer)
-    reqStrength = Column(Integer)
-    reqDexterity = Column(Integer)
-    reqIntelligence = Column(Integer)
+    user_id = Column(Integer, ForeignKey('user.id'))
+    build_id = Column(Integer, ForeignKey('build.id'))
+
+    __table_args__ = (UniqueConstraint('user_id', 'build_id', name='_user_build_uc'),)
 
 engine = create_engine('sqlite:///pathofexile.db')
 

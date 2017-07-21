@@ -1,0 +1,34 @@
+{% set active_page = '' %}
+{% extends "main.html" %}
+{% block title %}{{ build.title }}{% endblock %}
+{% block content %}
+  <h2>{{ build.title }} by {{ build.author }}</h2>
+  <h3>{{ build.character_class_name }}</h3>
+  
+  {% if is_favorite %}
+      Favorited
+  {% else %}
+    <a href="{{ url_for('makeFavorite', build_id=build.id, character_class_name=build.character_class_name) }}">Add to Favorites</a>
+  {% endif %}
+  <br>
+  
+  <a href="{{ build.url }}">Forum Link</a>
+  <br>
+
+  {% if g.user.id == creator_id %}
+    <a href="{{ url_for('editBuild', build_id=build.id, character_class_name=build.character_class_name) }}">Edit build</a>
+    <br>
+    <a href="{{ url_for('deleteBuild', build_id=build.id, character_class_name=build.character_class_name) }}">Delete build</a>
+  {% endif %}
+
+  <hr>
+
+  <h3>Description</h3>
+  {{ build.short_description }}
+
+  <hr>
+
+  <h3>Guide(Backup in case of forum failure)</h3>
+  <pre>{{ build.long_description }}</pre>
+
+{% endblock %}

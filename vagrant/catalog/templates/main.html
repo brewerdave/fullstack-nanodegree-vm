@@ -1,0 +1,81 @@
+{% set navigation_bar = [
+  ('showSearch', 'search', 'Search'),
+  ('addBuild', 'add', 'Add Build'),
+  ('showFavorites', 'favorite', 'Favorite Builds')
+] -%}
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+
+    <!-- Bootstrap Framework -->
+    <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
+
+    <!-- Custom CSS class -->
+    <link href="{{ url_for('static', filename='css/custom.css') }}" rel="stylesheet">
+
+    <!-- Bootstrap JavaScript and JQuery -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+
+    <title>{% block title %}{% endblock %}</title>
+  </head>
+
+  <body>
+    <div class="container">
+      <nav class="navbar navbar-inverse row container-fluid col-md-12">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#main-navbar-collapsed" aria-expanded="false">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="{{url_for('showHome')}}">Build Finder</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div class="collapse navbar-collapse" id="main-navbar-collapsed">
+          <ul class="nav navbar-nav navbar-left">
+            {% for function, id, text in navigation_bar %}
+              <li{% if id == active_page %} class="active"{% endif %}>
+                <a href="{{ url_for(function|e) }}">{{ text|e }}</a>
+              </li>
+            {% endfor %}
+          </ul>
+          <ul class="nav navbar-nav navbar-right">
+            {% if g.logged_in %}
+            <span> <!-- To allow <a> nav buttons to work -->
+              <img class="user-picture img-circle" src="{{g.user.picture}}" alt="User picture">
+              <a href="{{ url_for('gdisconnect') }}" class="btn btn-primary navbar-btn">Logout</a>
+            </span>
+            {% else %}
+            <span class="login-button"> <!-- To allow <a> nav buttons to work -->
+              <a href="{{ url_for('showLogin') }}" class="btn btn-primary navbar-btn">Login</a>
+            </span>
+            {% endif %}
+          </ul>
+        </div>
+      </nav>
+
+      {% with messages = get_flashed_messages() %}
+        {% if messages %}
+          <ul class=flashes>
+            {% for message in messages %}
+              <li>{{ message }}</li>
+            {% endfor %}
+          </ul>
+        {% endif %}
+      {% endwith %}
+
+			{% block content %}
+			{% endblock %}
+
+		</div>
+  </body>
+</html>   

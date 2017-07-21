@@ -1,0 +1,72 @@
+{% set active_page = 'search' %}
+{% extends "main.html" %}
+{% block title %}Search builds{% endblock %}
+{% block content %}
+<row>
+  <h2>Search Builds</h2>
+
+  <form action='#' method="post" role="form">
+
+    <div class="form-group col-md-12">
+      <label for="title">Title</label>
+      <input type="text" class="form-control" name="title">
+    </div>
+    
+    <div class="form-group col-sm-6 col-md-4">
+      <label for="character_class">Class</label>
+      <select class="form-control" name="character_class">
+        <option disabled selected value></option>
+        {% for c in character_classes %}
+          <option>{{ c.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="form-group col-sm-6 col-md-4">
+      <label for="version">Version</label>
+      <select class="form-control" name="version">
+        <option disabled selected value></option>
+        {% for v in versions %}
+          <option>{{ v.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="form-group col-sm-6 col-md-4">
+      <label for="character_class">Author</label>
+      <select class="form-control" name="author">
+        <option disabled selected value></option>
+        {% for a in authors %}
+          <option>{{ a[0] }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="form-group col-sm-6 col-md-4">
+      <label for="sort">Sort By</label>
+      <select class="form-control" name="sort">
+        <option>Date Updated</option>
+        <option>Date Created</option>
+      </select>
+    </div>
+
+    <div class="col-xs-12">
+      <button type="submit" class="btn btn-default" id="submit" type="submit">Search</button>
+    </div>
+
+  </form>
+</row>
+
+<hr>
+
+<row class="col-xs-12">
+  {% if results %}
+    {% for build in results %}
+      {% include "buildwell.html" %}
+    {% endfor %}
+  {% else %}
+    <em>No results to show.</em>
+  {% endif %}
+</row>
+
+{% endblock %}

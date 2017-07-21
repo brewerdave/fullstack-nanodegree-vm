@@ -1,0 +1,75 @@
+{% set active_page = '' %}
+{% extends "main.html" %}
+{% block title %}Edit build{% endblock %}
+{% block content %}
+{% if g.logged_in %}
+  <script src="{{ url_for('static', filename='js/validator.min.js') }}"></script>
+  <row>
+    <h2>Edit Build</h2>
+    
+    <form action='#' method="post" data-toggle="validator" role="form">
+      <div class="form-group col-md-12">
+        <label for="title" class="control-label">Title</label>
+        <input type="text" class="form-control" name="title" value="{{ build.title }}">
+      </div>
+
+      <div class="form-group col-md-12 has-feedback">
+        <label for="url" class="control-label">URL</label>
+        <input type="url" class="form-control" name="url" value="{{ build.url }}">
+        <!-- show error if incorrect url format -->
+        <span class="glyphicon form-control-feedback" aria-hidden="true"></span>
+        <div class="help-block with-errors"></div>
+      </div>
+
+      <div class="form-group col-md-12">
+        <label for="author" class="control-label">Author</label>
+        <input type="text" class="form-control" name="author" value="{{ build.author }}">
+      </div>
+
+      <div class="form-group col-sm-6">
+        <label for="character_class_name" class="control-label">Class</label>
+        <select class="form-control" name="character_class_name">
+          {% for c in character_classes %}
+            <option 
+            {% if c.name == build.character_class_name %}
+              selected
+            {% endif %}
+            >{{ c.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="form-group col-sm-6">
+        <label for="game_version" class="control-label">Version</label>
+        <select class="form-control" name="game_version">
+          {% for v in versions %}
+            <option 
+            {% if v.name == build.game_version %}
+              selected
+            {% endif %}
+            >{{ v.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="form-group col-md-12">
+        <label for="short_description" class="control-label">Description</label>
+        <textarea class="form-control" name="short_description" rows="5">{{ build.short_description }}</textarea>
+      </div>
+
+      <div class="form-group col-md-12">
+        <label for="long_description" class="control-label">Guide</label>
+        <textarea class="form-control" name="long_description" rows="20">{{ build.long_description }}</textarea>
+      </div>
+
+      <div class="col-xs-12">
+        <button type="submit" class="btn btn-default" id="submit" type="submit" data-disable="true">Edit</button>
+        <button type="cancel" class="btn btn-danger">Cancel</button>
+      </div>
+
+    </form>
+  </row>
+{% else %}
+  <h2>Please log in for this feature.</h2>
+{% endif %}
+{% endblock %}

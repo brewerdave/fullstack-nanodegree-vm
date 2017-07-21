@@ -1,0 +1,33 @@
+body {
+  padding-bottom: 15px;
+}
+
+th {
+  text-align: center;
+}
+
+.vertical-th th {
+  text-align: left !important;
+}
+
+.double-th th, .double-th thead{
+  border: none !important;
+  padding-top: 0px !important;
+}
+
+.showitem {
+  text-align: center;
+}
+
+.user-picture {
+  max-height: 35px;
+  margin: 5px 0px 5px 15px !important;
+}
+
+.build {
+  margin-top: 20px;
+}
+
+pre {
+  white-space: pre-wrap;
+}
