@@ -37,7 +37,7 @@
           data: authResult['code'],
           success: function(result) {
             if(result) {
-              $('#result').html('Login Successful!</br>' + result + '</br>Redirecting...')
+              $('#result').html('Login Successful!</br>' + '</br>Redirecting...')
               setTimeout( function() {
                 window.location.href = "{{ next_url }}";
               }, 4000);

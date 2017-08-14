@@ -101,15 +101,15 @@ def load_user(user_id):
 
 @login_manager.request_loader
 def load_user_from_request(request):
-    token = request.headers.get('Authorization')
-    if token:
-        token = token.replace('Basic ', '', 1)
+    token = None;
+    auth_headers = request.headers.get('Authorization')
+    if auth_headers:
+        token = auth_headers.replace('Basic ', '', 1)
 
     elif request.json:
         token = request.json.get("token")
-        user_id = User.verify_auth_token(token)
 
-    if user_id:
+    if token:
         user_id = User.verify_auth_token(token)
         if user_id:
             return get_user(user_id)
