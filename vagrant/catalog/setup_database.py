@@ -5,8 +5,13 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from sqlalchemy import create_engine
+from flask_login import UserMixin
+from itsdangerous import (TimedJSONWebSignatureSerializer as Serializer, BadSignature, SignatureExpired)
+import random
+import string
 
 Base = declarative_base()
+secret_key = ''.join(random.choice(string.ascii_uppercase + string.digits) for x in range(32))
 
 
 class CharacterClass(Base):
@@ -22,13 +27,31 @@ class GameVersion(Base):
     name = Column(String(5), primary_key=True)
 
 
-class User(Base):
+class User(Base, UserMixin):
     __tablename__ = 'user'
 
     id = Column(Integer, primary_key=True)
     name = Column(String(250), nullable=False)
-    email = Column(String(250), nullable=False)
+    email = Column(String(250), nullable=False, index=True)
     picture = Column(String(250))
+
+    def generate_auth_token(self, expiration=600):
+        s = Serializer(secret_key, expires_in=expiration)
+        return s.dumps({'id': self.id})
+
+    @staticmethod
+    def verify_auth_token(token):
+        s = Serializer(secret_key)
+        try:
+            data = s.loads(token)
+        except SignatureExpired:
+            # Valid Token, but expired
+            return None
+        except BadSignature:
+            # Invalid Token
+            return None
+        user_id = data['id']
+        return user_id
 
 
 class Build(Base):
@@ -48,6 +71,22 @@ class Build(Base):
     user_id = Column(Integer, ForeignKey('user.id'))
     user = relationship(User)
     favorites = relationship('Favorite', cascade='all, delete', backref='build')
+
+    @property
+    def serialize(self):
+        """Return object data in easily serializeable format"""
+        return {
+            'id': self.id,
+            'title': self.title,
+            'character_class_name': self.character_class_name,
+            'short_description': self.short_description,
+            'long_description': self.long_description,
+            'url': self.url,
+            'game_version': self.game_version,
+            'time_created': self.time_created,
+            'time_updated': self.time_updated,
+            'author': self.author
+        }
 
 
 class Favorite(Base):

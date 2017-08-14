@@ -31,3 +31,7 @@ th {
 pre {
   white-space: pre-wrap;
 }
+
+.flash {
+  padding: 0px;
+}

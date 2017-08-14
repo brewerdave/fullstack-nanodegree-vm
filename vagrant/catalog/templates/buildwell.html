@@ -1,8 +1,8 @@
 <article class="well well-sm build">
     <h3>
-      <a href="{{ url_for('showBuild', build_id=build.id, character_class_name=build.character_class_name) }}">{{ build.title }}</a>  by {{ build.author }}
+      <a href="{{ url_for('show_build', build_id=build.id, character_class_name=build.character_class_name) }}">{{ build.title }}</a>  by {{ build.author }}
     </h3>
     <span class="label label-success">{{ build.game_version }}</span>  <span class="label label-info">{{ build.character_class_name }}</span>
     <p>{{ build.short_description }}</p>
-    <sub>Last updated: {{ build.time_updated }}  Created on: {{ build.time_created }}</sub>
+    <sub>Last updated: {{ build.time_updated }}  Submitted on: {{ build.time_created }} by: {{ build.user.name }}</sub>
 </article>

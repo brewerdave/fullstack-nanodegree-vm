@@ -1,7 +1,7 @@
 {% set navigation_bar = [
-  ('showSearch', 'search', 'Search'),
-  ('addBuild', 'add', 'Add Build'),
-  ('showFavorites', 'favorite', 'Favorite Builds')
+  ('show_search', 'search', 'Search'),
+  ('add_build', 'add', 'Add Build'),
+  ('show_favorites', 'favorite', 'Favorite Builds')
 ] -%}
 
 <!DOCTYPE html>
@@ -36,7 +36,7 @@
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
           </button>
-          <a class="navbar-brand" href="{{url_for('showHome')}}">Build Finder</a>
+          <a class="navbar-brand" href="{{url_for('show_home')}}">Build Finder</a>
         </div>
 
         <!-- Collect the nav links, forms, and other content for toggling -->
@@ -49,20 +49,21 @@
             {% endfor %}
           </ul>
           <ul class="nav navbar-nav navbar-right">
-            {% if g.logged_in %}
+            {% if current_user.is_authenticated %}
             <span> <!-- To allow <a> nav buttons to work -->
-              <img class="user-picture img-circle" src="{{g.user.picture}}" alt="User picture">
-              <a href="{{ url_for('gdisconnect') }}" class="btn btn-primary navbar-btn">Logout</a>
+              <img class="user-picture img-circle" src="{{current_user.picture}}" alt="User picture">
+              <a href="{{ url_for('logout') }}" class="btn btn-primary navbar-btn">Logout</a>
             </span>
             {% else %}
             <span class="login-button"> <!-- To allow <a> nav buttons to work -->
-              <a href="{{ url_for('showLogin') }}" class="btn btn-primary navbar-btn">Login</a>
+              <a href="{{ url_for('show_login') }}" class="btn btn-primary navbar-btn">Login</a>
             </span>
             {% endif %}
           </ul>
         </div>
       </nav>
 
+      <div class="col-xs-12">
       {% with messages = get_flashed_messages() %}
         {% if messages %}
           <ul class=flashes>
@@ -72,6 +73,7 @@
           </ul>
         {% endif %}
       {% endwith %}
+      </div>
 
 			{% block content %}
 			{% endblock %}

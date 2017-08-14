@@ -3,22 +3,22 @@
 {% block title %}{{ build.title }}{% endblock %}
 {% block content %}
   <h2>{{ build.title }} by {{ build.author }}</h2>
-  <h3>{{ build.character_class_name }}</h3>
+  <h3>{{ build.character_class_name }} - v{{ build.game_version }}</h3>
   
   {% if is_favorite %}
       Favorited
   {% else %}
-    <a href="{{ url_for('makeFavorite', build_id=build.id, character_class_name=build.character_class_name) }}">Add to Favorites</a>
+    <a href="{{ url_for('make_favorite', build_id=build.id) }}">Add to Favorites</a>
   {% endif %}
   <br>
   
   <a href="{{ build.url }}">Forum Link</a>
   <br>
 
-  {% if g.user.id == creator_id %}
-    <a href="{{ url_for('editBuild', build_id=build.id, character_class_name=build.character_class_name) }}">Edit build</a>
+  {% if current_user.id == creator_id %}
+    <a href="{{ url_for('edit_build', build_id=build.id) }}">Edit build</a>
     <br>
-    <a href="{{ url_for('deleteBuild', build_id=build.id, character_class_name=build.character_class_name) }}">Delete build</a>
+    <a href="{{ url_for('delete_build', build_id=build.id) }}">Delete build</a>
   {% endif %}
 
   <hr>

@@ -2,65 +2,62 @@
 {% extends "main.html" %}
 {% block title %}Add build{% endblock %}
 {% block content %}
-{% if g.logged_in %}
-  <script src="{{ url_for('static', filename='js/validator.min.js') }}"></script>
-  <row>
-    <h2>Add Build</h2>
-    
-    <form action='#' method="post" data-toggle="validator" role="form">
-      <div class="form-group col-md-12">
-        <label for="title" class="control-label">Title</label>
-        <input type="text" class="form-control" name="title" required>
-      </div>
+<script src="{{ url_for('static', filename='js/validator.min.js') }}"></script>
+<row>
+  <h2>Add Build</h2>
+  
+  <form action='#' method="post" data-toggle="validator" role="form">
+    <div class="form-group col-md-12">
+      <label for="title" class="control-label">Title</label>
+      <input type="text" class="form-control" name="title" required>
+    </div>
 
-      <div class="form-group col-md-12 has-feedback">
-        <label for="url" class="control-label">URL</label>
-        <input type="url" class="form-control" name="url" required>
-        <!-- show error if incorrect url format -->
-        <span class="glyphicon form-control-feedback" aria-hidden="true"></span>
-        <div class="help-block with-errors"></div>
-      </div>
+    <div class="form-group col-md-12 has-feedback">
+      <label for="url" class="control-label">URL</label>
+      <input type="url" class="form-control" name="url" required>
+      <!-- show error if incorrect url format -->
+      <span class="glyphicon form-control-feedback" aria-hidden="true"></span>
+      <div class="help-block with-errors"></div>
+    </div>
 
-      <div class="form-group col-md-12">
-        <label for="author" class="control-label">Author</label>
-        <input type="text" class="form-control" name="author" required>
-      </div>
+    <div class="form-group col-md-12">
+      <label for="author" class="control-label">Author</label>
+      <input type="text" class="form-control" name="author" required>
+    </div>
 
-      <div class="form-group col-sm-6">
-        <label for="character_class" class="control-label">Class</label>
-        <select class="form-control" name="character_class">
-          {% for c in character_classes %}
-            <option>{{ c.name }}</option>
-          {% endfor %}
-        </select>
-      </div>
+    <div class="form-group col-sm-6">
+      <label for="character_class" class="control-label">Class</label>
+      <select class="form-control" name="character_class">
+        {% for c in character_classes %}
+          <option>{{ c.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
 
-      <div class="form-group col-sm-6">
-        <label for="version" class="control-label">Version</label>
-        <select class="form-control" name="version">
-          {% for v in versions %}
-            <option>{{ v.name }}</option>
-          {% endfor %}
-        </select>
-      </div>
+    <div class="form-group col-sm-6">
+      <label for="version" class="control-label">Version</label>
+      <select class="form-control" name="version">
+        {% for v in versions %}
+          <option>{{ v.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
 
-      <div class="form-group col-md-12">
-        <label for="short_description" class="control-label">Description</label>
-        <textarea class="form-control" name="short_description" rows="5" required></textarea>
-      </div>
+    <div class="form-group col-md-12">
+      <label for="short_description" class="control-label">Description</label>
+      <textarea class="form-control" name="short_description" rows="5" required></textarea>
+    </div>
 
-      <div class="form-group col-md-12">
-        <label for="long_description" class="control-label">Guide</label>
-        <textarea class="form-control" name="long_description" rows="20" required></textarea>
-      </div>
+    <div class="form-group col-md-12">
+      <label for="long_description" class="control-label">Guide</label>
+      <textarea class="form-control" name="long_description" rows="20" required></textarea>
+    </div>
 
-      <div class="col-xs-12">
-        <button type="submit" class="btn btn-default" id="submit" type="submit" data-disable="true">Add</button>
-      </div>
+    <div class="col-xs-12">
+      <button type="submit" class="btn btn-default" id="submit" type="submit" data-disable="true">Add</button>
+    </div>
 
-    </form>
-  </row>
-{% else %}
-  <h2>Please log in for this feature.</h2>
-{% endif %}
+  </form>
+</row>
+
 {% endblock %}

@@ -5,57 +5,134 @@ import string
 import httplib2
 import json
 import requests
+import time
+from functools import update_wrapper
 
 from flask import Flask, render_template, request, redirect, jsonify, url_for, flash, make_response, g
 from flask import session as login_session
+
+from flask_httpauth import HTTPBasicAuth
+from flask_login import *
+
+from redis import Redis
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm.exc import NoResultFound
 
-from setup_database import Base, CharacterClass, GameVersion, Build, User, Favorite
+from setup_database import Base, CharacterClass, GameVersion, Build, User, Favorite, secret_key
 
 from oauth2client.client import flow_from_clientsecrets
 from oauth2client.client import FlowExchangeError
 
-app = Flask(__name__)
-
+auth = HTTPBasicAuth()
+login_manager = LoginManager()
 CLIENT_ID = json.loads(open('client_secrets.json', 'r').read())['web']['client_id']
 
 engine = create_engine('sqlite:///pathofexile.db')
 Base.metadata.bind = engine
-
 DBSession = sessionmaker(bind=engine)
 session = DBSession()
 
+app = Flask(__name__)
+login_manager.init_app(app)
+login_manager.login_view = "show_login"
+redis = Redis()
 
-@app.before_request
-def checkLoginStatus():
-    g.logged_in = False
-    g.user = None
-    if login_session.get('username'):
-        g.user = getUser(login_session.get('user_id'))
-        if g.user:
-            g.logged_in = True
 
+""" Used to limit the amount of requests in a small period of time """
+class RateLimit(object):
+    expiration_window = 10
+
+    def __init__(self, key_prefix, limit, per, send_x_headers):
+        self.reset = (int(time.time()) // per) * per + per
+        self.key = key_prefix + str(self.reset)
+        self.limit = limit
+        self.per = per
+        self.send_x_headers = send_x_headers
+        p = redis.pipeline()
+        p.incr(self.key)
+        p.expireat(self.key, self.reset + self.expiration_window)
+        self.current = min(p.execute()[0], limit)
+
+    remaining = property(lambda x: x.limit - x.current)
+    over_limit = property(lambda x: x.current >= x.limit)
+
+
+def get_view_rate_limit():
+    return getattr(g, '_view_rate_limit', None)
+
+
+def on_over_limit(limit):
+    return (jsonify({'data':'You hit the rate limit','error':'429'}),429)
+
+
+def ratelimit(limit, per=300, send_x_headers=True,
+              over_limit=on_over_limit,
+              scope_func=lambda: request.remote_addr,
+              key_func=lambda: request.endpoint):
+    def decorator(f):
+        def rate_limited(*args, **kwargs):
+            key = 'rate-limit/%s/%s/' % (key_func(), scope_func())
+            rlimit = RateLimit(key, limit, per, send_x_headers)
+            g._view_rate_limit = rlimit
+            if over_limit is not None and rlimit.over_limit:
+                return over_limit(rlimit)
+            return f(*args, **kwargs)
+        return update_wrapper(rate_limited, f)
+    return decorator
+
+
+@app.after_request
+def inject_x_rate_headers(response):
+    limit = get_view_rate_limit()
+    if limit and limit.send_x_headers:
+        h = response.headers
+        h.add('X-RateLimit-Remaining', str(limit.remaining))
+        h.add('X-RateLimit-Limit', str(limit.limit))
+        h.add('X-RateLimit-Reset', str(limit.reset))
+    return response
+
+
+@login_manager.user_loader
+def load_user(user_id):
+    return get_user(user_id)
+
+
+@login_manager.request_loader
+def load_user_from_request(request):
+    print("load user from request")
+    token = request.headers.get('Authorization')
+    if token:
+        token = token.replace('Basic ', '', 1)
+        user_id = User.verify_auth_token(token)
+        print(user_id)
+        if user_id:
+            return get_user(user_id)
+
+    return None
 
 
 @app.route('/')
-@app.route('/builds/')
-def showHome():
+@app.route('/buildfinder/')
+def show_home():
     latest_builds = session.query(Build).order_by(Build.time_updated.desc()).limit(5)
     return render_template('home.html', latest_builds=latest_builds)
 
 
-@app.route('/login/')
-def showLogin():
+@app.route('/buildfinder/login/')
+def show_login():
     state = ''.join(random.choice(string.ascii_uppercase + string.digits) for x in range(32))
     login_session['state'] = state
-    return render_template('login.html', STATE=state)
+    next_url = request.args.get('next')
+    if next_url:
+        return render_template('login.html', STATE=state, next_url=next_url)
+    else:
+        return render_template('login.html', STATE=state, next_url=url_for('show_home'))
 
 
-@app.route('/builds/search', methods=['POST', 'GET'])
-def showSearch():
+@app.route('/buildfinder/search', methods=['POST', 'GET'])
+def show_search():
     character_classes = session.query(CharacterClass).all()
     versions = session.query(GameVersion).order_by(GameVersion.name.desc())
     authors = session.query(Build.author).distinct()
@@ -82,141 +159,85 @@ def showSearch():
                            results=results, authors=authors)
 
 
-@app.route('/builds/add', methods=['POST', 'GET'])
-def addBuild():
+@app.route('/buildfinder/add', methods=['POST', 'GET'])
+@login_required
+def add_build():
     if request.method == 'POST':
-        if request.form['title'] and request.form['url'] and request.form['short_description'] \
-                and request.form['long_description'] and request.form['character_class'] \
-                and request.form['version'] and request.form['author']:
-            build = Build(title=request.form['title'], url=request.form['url'],
-                          short_description=request.form['short_description'],
-                          long_description=request.form['long_description'],
-                          character_class_name=request.form['character_class'],
-                          game_version=request.form['version'],
-                          user_id=login_session['user_id'],
-                          author=login_session['author'])
-            session.add(build)
-            session.commit()
-            flash("Build added")
+        build = add_build()
+        if build:
+            return redirect(url_for('show_build', build_id=build.id))
 
-        return redirect(url_for('showBuild', character_class_name=build.character_class_name, build_id=build.id))
-    else:
-        character_classes = session.query(CharacterClass).all()
-        versions = session.query(GameVersion).order_by(GameVersion.name.desc())
-        return render_template('addbuild.html', character_classes=character_classes, versions=versions)
+    character_classes = session.query(CharacterClass).all()
+    versions = session.query(GameVersion).order_by(GameVersion.name.desc())
+    return render_template('addbuild.html', character_classes=character_classes, versions=versions)
 
 
-@app.route('/builds/<string:character_class_name>/<string:build_id>')
-def showBuild(build_id, character_class_name):
-    build = session.query(Build).filter_by(id=build_id).one()
+@app.route('/buildfinder/<int:build_id>')
+def show_build(build_id):
+    build = get_build(build_id)
     creator_id = build.user.id
     is_favorite = False
 
-    if g.logged_in:
+    if not current_user.is_anonymous:
+        # Returns true if build/user exists in favorites list
         if session.query(
-                session.query(Favorite).filter_by(build_id=build_id, user_id=g.user.id).exists()
+                session.query(Favorite).filter_by(build_id=build_id, user_id=current_user.id).exists()
         ).scalar():
             is_favorite = True
 
     return render_template('showbuild.html', build=build, creator_id=creator_id, is_favorite=is_favorite)
 
 
-@app.route('/builds/<string:character_class_name>/<string:build_id>/edit', methods=['GET', 'POST'])
-def editBuild(build_id, character_class_name):
+@app.route('/buildfinder/<int:build_id>/edit', methods=['GET', 'POST'])
+@login_required
+def edit_build(build_id):
     build = session.query(Build).filter_by(id=build_id).one()
     character_classes = session.query(CharacterClass).all()
     versions = session.query(GameVersion).order_by(GameVersion.name.desc())
 
     if request.method == 'POST':
-        if g.logged_in and g.user.id == build.user_id:
-            if request.form['title']:
-                build.title = request.form['title']
-            if request.form['character_class_name']:
-                build.character_class_name = request.form['character_class_name']
-            if request.form['short_description']:
-                build.short_description = request.form['short_description']
-            if request.form['long_description']:
-                build.long_description = request.form['long_description']
-            if request.form['url']:
-                build.url = request.form['url']
-            if request.form['game_version']:
-                build.game_version = request.form['game_version']
-            if request.form['author']:
-                build.author = request.form['author']
-
-            flash("Build edited")
-            return redirect(url_for('showBuild', build_id=build_id, character_class_name=character_class_name))
-
-        else:
-            flash("Must be logged in as user that created build")
-            return redirect(url_for('showBuild', character_class_name=character_class_name, build_id=build_id))
+        edit_build(build_id)
+        return redirect(url_for('show_build', build_id=build_id))
 
     else:
-        return render_template('editbuild.html', build=build, character_classes=character_classes, versions=versions)
+        return render_template('editbuild.html', build=build, versions=versions, character_classes=character_classes)
 
 
-@app.route('/builds/<string:character_class_name>/<string:build_id>/delete', methods=['GET', 'POST'])
-def deleteBuild(build_id, character_class_name):
-    build = session.query(Build).filter_by(id=build_id).one()
+@app.route('/buildfinder/<int:build_id>/delete', methods=['GET', 'POST'])
+@login_required
+def delete_build(build_id):
     if request.method == 'POST':
-        session.delete(build)
-        session.commit()
-        flash('Build deleted')
-        return redirect(url_for('showHome'))
-    else:
-        return render_template('deletebuild.html', build=build)
+        if delete_build(build_id):
+            return redirect(url_for('show_home'))
+
+    build = get_build(build_id)
+    return render_template('deletebuild.html', build=build)
 
 
-@app.route('/builds/favorites/')
-def showFavorites():
-    favorites = []
-
-    if g.logged_in:
-        favorites = session.query(Favorite).filter_by(user_id=g.user.id).all()
+@app.route('/favorites/')
+@login_required
+def show_favorites():
+    favorites = session.query(Favorite).filter_by(user_id=current_user.id).all()
     return render_template('favorites.html', favorites=favorites)
 
 
-@app.route('/builds/<string:character_class_name>/<string:build_id>/makefavorite')
-def makeFavorite(build_id, character_class_name):
+@app.route('/buildfinder/<int:build_id>/favorite')
+@login_required
+def make_favorite(build_id):
     if login_session.get('user_id'):
         favorite = Favorite(user_id=login_session.get('user_id'), build_id=build_id)
         session.add(favorite)
         session.commit()
 
         flash('Build added to favorites')
-        return redirect(url_for('showBuild', build_id=build_id, character_class_name=character_class_name))
+        return redirect(url_for('show_build', build_id=build_id))
     else:
         flash('Please login for this feature')
-        return redirect(url_for('showBuild', build_id=build_id, character_class_name=character_class_name))
+        return redirect(url_for('show_build', build_id=build_id))
 
 
-def createUser(login_session):
-    new_user = User(name=login_session['username'], email=login_session['email'],
-                    picture=login_session['picture'])
-    session.add(new_user)
-    session.commit()
-    user = session.query(User).filter_by(email=login_session['email']).one()
-    return user.id
-
-
-def getUser(user_id):
-    try:
-        user = session.query(User).filter_by(id=user_id).one()
-        return user
-    except NoResultFound:
-        return None
-
-
-def getUserID(email):
-    try:
-        user = session.query(User).filter_by(email=email).one()
-        return user.id
-    except NoResultFound:
-        return None
-
-
-@app.route('/gconnect', methods=['POST'])
-def gconnect():
+@app.route('/oauth/google', methods=['POST'])
+def login_google():
     if request.args.get('state') != login_session['state']:
         response = make_response(json.dumps('Invalid state parameter'), 401)
         response.headers['Content-Type'] = 'application/json'
@@ -263,7 +284,7 @@ def gconnect():
     login_session['gplus_id'] = gplus_id
 
     userinfo_url = "https://www.googleapis.com/oauth2/v1/userinfo"
-    params = {'access_token': credentials.access_token, 'alt':'json'}
+    params = {'access_token': credentials.access_token, 'alt': 'json'}
     answer = requests.get(userinfo_url, params=params)
     data = json.loads(answer.text)
 
@@ -271,24 +292,20 @@ def gconnect():
     login_session['picture'] = data["picture"]
     login_session['email'] = data["email"]
 
-    user_id = getUserID(login_session['email'])
+    user_id = get_user_id(login_session['email'])
     if not user_id:
-        user_id = createUser(login_session)
+        user_id = create_user(login_session)
     login_session['user_id'] = user_id
 
-    output = ''
-    output += '<h1>Welcome, '
-    output += login_session['username']
-    output += '!</h1>'
-    output += '<img src="'
-    output += login_session['picture']
-    output += ' " style = "width: 300px; height: 300px;border-radius: 150px;-webkit-border-radius: 150px;-moz-border-radius: 150px;"> '
-    flash("You are now logged in as %s" % login_session['username'])
-    return output
+    user = session.query(User).filter_by(id=user_id).first()
+    login_user(user, remember=True)
+
+    token = current_user.generate_auth_token()
+    return jsonify({'token': token.decode('ascii')})
 
 
-@app.route("/gdisconnect")
-def gdisconnect():
+@app.route("/logout")
+def logout():
     # See if user is connected
     access_token = login_session.get('access_token')
     if access_token is None:
@@ -302,22 +319,132 @@ def gdisconnect():
     result = h.request(url, 'GET')[0]
 
     if result['status'] == '200':
-        del login_session['access_token']
-        del login_session['gplus_id']
-        del login_session['username']
-        del login_session['email']
-        del login_session['picture']
-
         response = make_response(json.dumps('Successfully disconnected.'), 200)
         response.headers['Content-Type'] = 'application/json'
         flash("Logged out")
-        return showHome()
+        logout_user()
+        return show_home()
+
     else:
+        flash('Failed to revoke token for given user.')
         response = make_response(json.dumps('Failed to revoke token for given user.'), 400)
         response.headers['Content-Type'] = 'application/json'
         return response
 
+
+@app.route('/buildfinder/api/v1/token')
+@login_required
+def get_auth_token():
+    token = current_user.generate_auth_token()
+    return jsonify({'token': token.decode('ascii')})
+
+
+@app.route("/buildfinder/api/v1/builds", methods=['GET', 'POST'])
+@login_required
+def api_builds_function():
+    if request.method == 'GET':
+        builds = session.query(Build).all()
+        return jsonify(json_list=[build.serialize for build in builds])
+
+    elif request.method == 'POST':
+        add_build()
+
+
+@app.route("/buildfinder/api/v1/build/<int:build_id>", methods=['GET', 'PUT', 'DELETE'])
+@login_required
+def api_build_function(build_id):
+    if request.method == 'GET':
+        build = get_build(build_id)
+        return jsonify(json_list=[build.serialize])
+
+    elif request.method == 'DELETE':
+        delete_build(build_id)
+
+    elif request.method == 'PUT':
+        edit_build(build_id)
+
+
+def add_build():
+    build = Build(title=request.form['title'], url=request.form['url'],
+                  short_description=request.form['short_description'],
+                  long_description=request.form['long_description'],
+                  character_class_name=request.form['character_class'],
+                  game_version=request.form['version'],
+                  user_id=login_session['user_id'],
+                  author=login_session['author'])
+    session.add(build)
+    session.commit()
+    flash('Build Added')
+    return build
+
+
+def delete_build(build_id):
+    build = session.query(Build).filter_by(id=build_id).one()
+    if current_user.id == build.id:
+        session.delete(build)
+        session.commit()
+        flash('Build deleted')
+        return True
+    else:
+        flash('Only build submitter can delete the build')
+        return False
+
+
+def get_build(build_id):
+    return session.query(Build).filter_by(id=build_id).one()
+
+
+def edit_build(build_id):
+    build = session.query(Build).filter_by(id=build_id).one()
+    if current_user.id == build.user_id:
+        if request.form['title']:
+            build.title = request.form['title']
+        if request.form['character_class_name']:
+            build.character_class_name = request.form['character_class_name']
+        if request.form['short_description']:
+            build.short_description = request.form['short_description']
+        if request.form['long_description']:
+            build.long_description = request.form['long_description']
+        if request.form['url']:
+            build.url = request.form['url']
+        if request.form['game_version']:
+            build.game_version = request.form['game_version']
+        if request.form['author']:
+            build.author = request.form['author']
+
+        session.commit()
+        flash('Build edited')
+        return True
+
+    flash('Only build submitter can edit the build')
+    return False
+
+
+def create_user(login_session):
+    new_user = User(name=login_session['username'], email=login_session['email'], picture=login_session['picture'])
+    session.add(new_user)
+    session.commit()
+    user = session.query(User).filter_by(email=login_session['email']).one()
+    return user.id
+
+
+def get_user(user_id):
+    try:
+        user = session.query(User).filter_by(id=user_id).one()
+        return user
+    except NoResultFound:
+        return None
+
+
+def get_user_id(email):
+    try:
+        user = session.query(User).filter_by(email=email).one()
+        return user.id
+    except NoResultFound:
+        return None
+
+
 if __name__ == '__main__':
-    app.secret_key = 'super_secret_key'
+    app.secret_key = secret_key
     app.debug = True
     app.run(host='0.0.0.0', port=5000)

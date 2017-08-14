@@ -1,20 +1,27 @@
 {% extends "main.html" %}
 {% block title %}Login{% endblock %}
 {% block content %}
-<row class="col-xs-12 text-center">
-  <div id="signinButton">
-    <span class="g-signin"
-      data-scope="openid email"
-      data-clientid="218153896499-073uc48f1gu19r2611sfndj62ikdpq0n.apps.googleusercontent.com"
-      data-redirecturi="postmessage"
-      data-accesstype="offline"
-      data-cookiepolicy="single_host_origin"
-      data-callback="signInCallback"
-      data-approvalprompt="force">
-    </span>
-  </div>  
+<row class="col-xs-4 col-md-offset-4 text-center">
+  <script src="https://apis.google.com/js/platform.js?onload=start"></script>
+  
+  <script>
+    gapi.load('auth2', function() {
+      auth2 = gapi.auth2.init({
+        client_id: '218153896499-073uc48f1gu19r2611sfndj62ikdpq0n.apps.googleusercontent.com',
+      });
+    });
+  </script>
+
   <div id="result"></div>
-  <script src="https://apis.google.com/js/platform.js" async defer></script>
+
+  <div class="g-signin2" id="signinButton" data-width="240" data-height="50" data-longtitle="true" data-theme="dark">Sign in with Google</div>
+
+  <script>
+    $('#signinButton').click(function() {
+      auth2.grantOfflineAccess({'redirect_uri': 'postmessage'}).then(signInCallback);
+    });
+  </script>
+
   <script>
     function signInCallback(authResult) {
       if(authResult['code']) {
@@ -24,7 +31,7 @@
         // Send one-time-use code to server. If the server responds, write success message and redirect to main page
         $.ajax({
           type: 'POST',
-          url: '/gconnect?state={{STATE}}',
+          url: '/oauth/google?state={{STATE}}',
           processData: false,
           contentType: 'application/octet-stram; charset=utf-8',
           data: authResult['code'],
@@ -32,7 +39,7 @@
             if(result) {
               $('#result').html('Login Successful!</br>' + result + '</br>Redirecting...')
               setTimeout( function() {
-                window.location.href = "/builds";
+                window.location.href = "{{ next_url }}";
               }, 4000);
             } else if (authResult['error']) {
               console.log('There was an error:' + authResult['error']);
@@ -44,5 +51,6 @@
       }
     }
   </script>
+
 </row>
 {% endblock %}

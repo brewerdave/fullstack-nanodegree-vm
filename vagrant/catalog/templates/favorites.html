@@ -2,8 +2,8 @@
 {% extends "main.html" %}
 {% block title %}Favorites{% endblock %}
 {% block content %}
+
 <div class="col-xs-12">
-{% if g.logged_in %}
   {% if favorites %}
     {% for favorite in favorites %}
       {% set build = favorite.build %}
@@ -12,8 +12,5 @@
   {% else %}
   <em>No favorites saved yet.</em>
   {% endif %}
-{% else %}
-  <h2>Please log in for this feature.</h2>
-{% endif %}
 </div>
 {% endblock %}
