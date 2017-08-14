@@ -12,6 +12,7 @@ This project is available on [GitHub](https://github.com/brewerdave/fullstack-na
 
 * VirtualBox
 * Vagrant
+* Javascript should be enabled to view the website properly
 
 ## To Run ##
 
@@ -39,3 +40,39 @@ rm pathofexile.db
 python3 setup_database.py
 python3 load_database.py
 ```
+Visit http://localhost:5000/buildfinder to see the website.
+
+## API ##
+Visit http://localhost:5000/buildfinder/api/v1/token in a browser to get a one hour token.
+
+You can send cURL requests such as (replacing TOKEN with your token and adding any needed parameters to the JSON):
+
+```bash
+curl -H "Content-Type: application/json" -X GET -d '{"token":"TOKEN"}' http://localhost:5000/buildfinder/api/v1/builds
+```
+
+For http://localhost:5000/buildfinder/api/v1/builds:
+* GET request returns all builds
+* POST adds a build
+  * Required Parameters
+    * title : Title of build
+    * url : Forum link of build
+    * short_description : Short overview of build
+    * long_description : Text of actual build
+    * character_class_name : Character class
+    * game_version : Version build is for (eg. 2.6 or 3.0)
+    * author : Author of the build
+
+For http://localhost:5000/buildfinder/api/v1/build/ID (where ID is the build's integer id):
+
+* GET returns the build
+* DELETE deletes the build
+* PUT edits the build
+  * Optional Paramters
+    * title : Title of build
+    * url : Forum link of build
+    * short_description : Short overview of build
+    * long_description : Text of actual build
+    * character_class_name : Character class
+    * game_version : Version build is for (eg. 2.6 or 3.0)
+    * author : Author of the build

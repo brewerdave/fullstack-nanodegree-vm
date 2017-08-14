@@ -35,7 +35,7 @@ class User(Base, UserMixin):
     email = Column(String(250), nullable=False, index=True)
     picture = Column(String(250))
 
-    def generate_auth_token(self, expiration=600):
+    def generate_auth_token(self, expiration=3600):
         s = Serializer(secret_key, expires_in=expiration)
         return s.dumps({'id': self.id})
 

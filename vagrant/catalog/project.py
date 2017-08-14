@@ -101,12 +101,16 @@ def load_user(user_id):
 
 @login_manager.request_loader
 def load_user_from_request(request):
-    print("load user from request")
     token = request.headers.get('Authorization')
     if token:
         token = token.replace('Basic ', '', 1)
+
+    elif request.json:
+        token = request.json.get("token")
         user_id = User.verify_auth_token(token)
-        print(user_id)
+
+    if user_id:
+        user_id = User.verify_auth_token(token)
         if user_id:
             return get_user(user_id)
 
@@ -347,7 +351,10 @@ def api_builds_function():
         return jsonify(json_list=[build.serialize for build in builds])
 
     elif request.method == 'POST':
-        add_build()
+        if add_build():
+            return jsonify(success="true")
+        return jsonify(success="false")
+
 
 
 @app.route("/buildfinder/api/v1/build/<int:build_id>", methods=['GET', 'PUT', 'DELETE'])
@@ -358,20 +365,41 @@ def api_build_function(build_id):
         return jsonify(json_list=[build.serialize])
 
     elif request.method == 'DELETE':
-        delete_build(build_id)
+        if delete_build(build_id):
+            return jsonify(success="true")
+        return jsonify(success="false")
 
     elif request.method == 'PUT':
-        edit_build(build_id)
+        if edit_build(build_id):
+            return jsonify(success="true")
+        return jsonify(success="false")
 
 
 def add_build():
-    build = Build(title=request.form['title'], url=request.form['url'],
-                  short_description=request.form['short_description'],
-                  long_description=request.form['long_description'],
-                  character_class_name=request.form['character_class'],
-                  game_version=request.form['version'],
-                  user_id=login_session['user_id'],
-                  author=login_session['author'])
+    if not request.json:
+        build = Build(title=request.form['title'], url=request.form['url'],
+                      short_description=request.form['short_description'],
+                      long_description=request.form['long_description'],
+                      character_class_name=request.form['character_class'],
+                      game_version=request.form['version'],
+                      user_id=current_user.id,
+                      author=request.form['author'])
+
+    else:
+        if request.json:
+            title = request.json.get("title")
+            url = request.json.get("url")
+            short_description = request.json.get("short_description")
+            long_description = request.json.get("long_description")
+            character_class_name = request.json.get("character_class")
+            game_version = request.json.get("version")
+            user_id = current_user.id
+            author = request.json.get("author")
+
+            build = Build(title=title, url=url, short_description=short_description, long_description=long_description,
+                          character_class_name=character_class_name, game_version=game_version, user_id=user_id,
+                          author=author)
+
     session.add(build)
     session.commit()
     flash('Build Added')
@@ -380,7 +408,7 @@ def add_build():
 
 def delete_build(build_id):
     build = session.query(Build).filter_by(id=build_id).one()
-    if current_user.id == build.id:
+    if current_user.id == build.user_id:
         session.delete(build)
         session.commit()
         flash('Build deleted')
@@ -396,25 +424,48 @@ def get_build(build_id):
 
 def edit_build(build_id):
     build = session.query(Build).filter_by(id=build_id).one()
-    if current_user.id == build.user_id:
-        if request.form['title']:
-            build.title = request.form['title']
-        if request.form['character_class_name']:
-            build.character_class_name = request.form['character_class_name']
-        if request.form['short_description']:
-            build.short_description = request.form['short_description']
-        if request.form['long_description']:
-            build.long_description = request.form['long_description']
-        if request.form['url']:
-            build.url = request.form['url']
-        if request.form['game_version']:
-            build.game_version = request.form['game_version']
-        if request.form['author']:
-            build.author = request.form['author']
 
-        session.commit()
-        flash('Build edited')
-        return True
+    if not request.json:
+        if current_user.id == build.user_id:
+            if request.form['title']:
+                build.title = request.form['title']
+            if request.form['character_class_name']:
+                build.character_class_name = request.form['character_class_name']
+            if request.form['short_description']:
+                build.short_description = request.form['short_description']
+            if request.form['long_description']:
+                build.long_description = request.form['long_description']
+            if request.form['url']:
+                build.url = request.form['url']
+            if request.form['game_version']:
+                build.game_version = request.form['game_version']
+            if request.form['author']:
+                build.author = request.form['author']
+
+            session.commit()
+            flash('Build edited')
+            return True
+
+    else:
+        data = request.json
+        if data and current_user.id == build.user_id:
+            if request.json.get("title"):
+                build.title = request.json.get("title")
+            if request.json.get("character_class_name"):
+                build.character_class_name = request.json.get("character_class_name")
+            if request.json.get("short_description"):
+                build.short_description = request.json.get("short_description")
+            if request.json.get("long_description"):
+                build.long_description = request.json.get("long_description")
+            if request.json.get("url"):
+                build.url = request.json.get("url")
+            if request.json.get("game_version"):
+                build.game_version = request.json.get("game_version")
+            if request.json.get("author"):
+                build.author = request.json.get("author")
+
+            session.commit()
+            return True
 
     flash('Only build submitter can edit the build')
     return False

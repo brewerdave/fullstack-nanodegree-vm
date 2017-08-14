@@ -3,18 +3,9 @@
   <component name="ChangeListManager">
     <list default="true" id="18f1d974-2098-4368-b6da-9c3e3f5be552" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/pathofexile.db" afterPath="$PROJECT_DIR$/pathofexile.db" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/README.md" afterPath="$PROJECT_DIR$/README.md" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/project.py" afterPath="$PROJECT_DIR$/project.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/setup_database.py" afterPath="$PROJECT_DIR$/setup_database.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/static/css/custom.css" afterPath="$PROJECT_DIR$/static/css/custom.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/templates/addbuild.html" afterPath="$PROJECT_DIR$/templates/addbuild.html" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/templates/buildwell.html" afterPath="$PROJECT_DIR$/templates/buildwell.html" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/templates/deletebuild.html" afterPath="$PROJECT_DIR$/templates/deletebuild.html" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/templates/editbuild.html" afterPath="$PROJECT_DIR$/templates/editbuild.html" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/templates/favorites.html" afterPath="$PROJECT_DIR$/templates/favorites.html" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/templates/login.html" afterPath="$PROJECT_DIR$/templates/login.html" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/templates/main.html" afterPath="$PROJECT_DIR$/templates/main.html" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/templates/showbuild.html" afterPath="$PROJECT_DIR$/templates/showbuild.html" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -31,8 +22,8 @@
           <file leaf-file-name="project.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/project.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="-6197">
-                  <caret line="41" column="0" lean-forward="true" selection-start-line="41" selection-start-column="0" selection-end-line="41" selection-end-column="0" />
+                <state relative-caret-position="-366">
+                  <caret line="380" column="74" lean-forward="true" selection-start-line="380" selection-start-column="74" selection-end-line="380" selection-end-column="74" />
                   <folding>
                     <element signature="e#24#37#0" expanded="true" />
                   </folding>
@@ -44,11 +35,11 @@
       </split-first>
       <split-second>
         <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-          <file leaf-file-name="setup_database.py" pinned="false" current-in-tab="false">
+          <file leaf-file-name="setup_database.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/setup_database.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="187">
-                  <caret line="11" column="0" lean-forward="false" selection-start-line="11" selection-start-column="0" selection-end-line="11" selection-end-column="0" />
+                <state relative-caret-position="646">
+                  <caret line="53" column="22" lean-forward="true" selection-start-line="53" selection-start-column="22" selection-end-line="53" selection-end-column="22" />
                   <folding>
                     <element signature="e#24#110#0" expanded="true" />
                   </folding>
@@ -56,10 +47,10 @@
               </provider>
             </entry>
           </file>
-          <file leaf-file-name="load_database.py" pinned="false" current-in-tab="true">
+          <file leaf-file-name="load_database.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/load_database.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="306">
+                <state relative-caret-position="51">
                   <caret line="90" column="0" lean-forward="false" selection-start-line="90" selection-start-column="0" selection-end-line="90" selection-end-column="0" />
                   <folding>
                     <element signature="e#24#60#0" expanded="true" />
@@ -104,6 +95,7 @@
       <find>&lt;string:character_class_name&gt;/</find>
       <find>api/</find>
       <find>auth</find>
+      <find>request.json.</find>
     </findStrings>
     <replaceStrings>
       <replace>Armour</replace>
@@ -116,6 +108,7 @@
       <replace>db_session</replace>
       <replace>current_user</replace>
       <replace>api/v1/</replace>
+      <replace>request.json.get(&quot;</replace>
     </replaceStrings>
     <dirStrings>
       <dir>C:\Users\david\Source\Repos\fullstack-nanodegree-vm\vagrant\catalog</dir>
@@ -129,9 +122,9 @@
       <list>
         <option value="$PROJECT_DIR$/database_setup.py" />
         <option value="$PROJECT_DIR$/templates/showbuild.html" />
+        <option value="$PROJECT_DIR$/load_database.py" />
         <option value="$PROJECT_DIR$/setup_database.py" />
         <option value="$PROJECT_DIR$/project.py" />
-        <option value="$PROJECT_DIR$/load_database.py" />
       </list>
     </option>
   </component>
@@ -336,8 +329,9 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="-8" y="-8" width="1936" height="1056" extended-state="6" />
+    <editor active="true" />
     <layout>
-      <window_info id="Project" active="true" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.114605546" sideWeight="0.5" order="1" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.114605546" sideWeight="0.5" order="1" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="10" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32936078" sideWeight="0.5021322" order="0" side_tool="true" content_ui="tabs" />
       <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32936078" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
@@ -725,19 +719,9 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/setup_database.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="187">
-          <caret line="11" column="0" lean-forward="false" selection-start-line="11" selection-start-column="0" selection-end-line="11" selection-end-column="0" />
-          <folding>
-            <element signature="e#24#110#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/load_database.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="306">
+        <state relative-caret-position="51">
           <caret line="90" column="0" lean-forward="false" selection-start-line="90" selection-start-column="0" selection-end-line="90" selection-end-column="0" />
           <folding>
             <element signature="e#24#60#0" expanded="true" />
@@ -745,10 +729,20 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/setup_database.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="646">
+          <caret line="53" column="22" lean-forward="true" selection-start-line="53" selection-start-column="22" selection-end-line="53" selection-end-column="22" />
+          <folding>
+            <element signature="e#24#110#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/project.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-6197">
-          <caret line="41" column="0" lean-forward="true" selection-start-line="41" selection-start-column="0" selection-end-line="41" selection-end-column="0" />
+        <state relative-caret-position="-366">
+          <caret line="380" column="74" lean-forward="true" selection-start-line="380" selection-start-column="74" selection-end-line="380" selection-end-column="74" />
           <folding>
             <element signature="e#24#37#0" expanded="true" />
           </folding>
